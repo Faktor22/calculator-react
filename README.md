@@ -2,6 +2,8 @@
 
 React Calculator is a calculator app built with React. It supports basic arithmetic operations, decimal values, percentage calculation, value inversion, and number formatting. The app also features an auto-resizing output area that adjusts its size according to the length of the output.
 
+![Calculator Screenshot](https://i.ibb.co/rs3WxsY/react-calculator.png)
+
 ## Features
 
 1. Basic arithmetic operations: addition, subtraction, multiplication, and division

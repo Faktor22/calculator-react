@@ -1,7 +1,8 @@
-import { useState } from "react";
-import Screen from "./Screen";
-import Button from "./Button";
-import { Wrapper, ButtonBox } from "./styles";
+import React, { useState } from "react";
+import Wrapper from "./components/Wrapper";
+import Screen from "./components/Screen";
+import ButtonBox from "./components/ButtonBox";
+import Button from "./components/Button";
 
 const calculatorButtons = [
   ["C", "+-", "%", "/"],
@@ -26,61 +27,59 @@ const App = () => {
     res: 0,
   });
 
-  const handleNumberClick = (e) => {
-    e.preventDefault();
-    const value = e.target.innerHTML;
-    const num = removeSpaces(calc.num);
-    if (num.length < 16) {
+  const handleNumberClick = (value) => {
+    if (removeSpaces(calc.num).length < 16) {
       setCalc({
         ...calc,
         num:
-          num % 1 === 0 && !calc.num.toString().includes(".")
-            ? formatNumber(Number(num + value))
+          removeSpaces(calc.num) % 1 === 0 && !calc.num.toString().includes(".")
+            ? formatNumber(Number(removeSpaces(calc.num + value)))
             : formatNumber(calc.num + value),
         res: !calc.sign ? 0 : calc.res,
       });
     }
   };
 
-  const handleCommaClick = (e) => {
-    e.preventDefault();
-    const value = e.target.innerHTML;
+  const handleCommaClick = (value) => {
     setCalc({
       ...calc,
       num: !calc.num.toString().includes(".") ? calc.num + value : calc.num,
     });
   };
 
-  const handleSignClick = (e) => {
-    const sign = e.target.innerHTML;
-    const { num, res, sign: prevSign } = calc;
-    if (num && prevSign) {
-      setCalc({
-        ...calc,
-        res: formatNumber(calculate(Number(removeSpaces(res)), Number(removeSpaces(num)), prevSign)),
-        num: 0,
-        sign,
-      });
-    } else {
-      setCalc({
-        ...calc,
-        sign,
-        res: num ? num : res,
-        num: 0,
-      });
-    }
+  const handleSignClick = (value) => {
+    setCalc({
+      ...calc,
+      sign: value,
+      res: !calc.num
+        ? calc.res
+        : !calc.res
+        ? calc.num
+        : formatNumber(
+            math(
+              Number(removeSpaces(calc.res)),
+              Number(removeSpaces(calc.num)),
+              calc.sign
+            )
+          ),
+      num: 0,
+    });
   };
 
   const handleEqualsClick = () => {
-    const { num, res, sign: prevSign } = calc;
-    if (prevSign && num) {
-      const result = calculate(Number(removeSpaces(res)), Number(removeSpaces(num)), prevSign);
+    if (calc.sign && calc.num) {
       setCalc({
         ...calc,
         res:
-          num === "0" && prevSign === "/"
-            ? "Can't divide with 0"
-            : formatNumber(result),
+          calc.num === "0" && calc.sign === "/"
+            ? "Cannot divide by zero"
+            : formatNumber(
+                math(
+                  Number(removeSpaces(calc.res)),
+                  Number(removeSpaces(calc.num)),
+                  calc.sign
+                )
+              ),
         sign: "",
         num: 0,
       });
@@ -97,28 +96,54 @@ const App = () => {
   };
 
   const handlePercentClick = () => {
-    const num = calc.num ? parseFloat(removeSpaces(calc.num)) : 0;
-  }
+    let num = calc.num ? parseFloat(removeSpaces(calc.num)) : 0;
+    let res = calc.res ? parseFloat(removeSpaces(calc.res)) : 0;
+    setCalc({
+      ...calc,
+      num: (num /= Math.pow(100, 1)),
+      res: (res /= Math.pow(100, 1)),
+      sign: "",
+    });
+  };
 
-function App() {
+  const handleResetClick = () => {
+    setCalc({
+      ...calc,
+      sign: "",
+      num: 0,
+      res: 0,
+    });
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Wrapper>
+      <Screen value={calc.num ? calc.num : calc.res} />
+      <ButtonBox>
+        {calculatorButtons.flat().map((btn, i) => (
+          <Button
+            key={i}
+            className={btn === "=" ? "equals" : ""}
+            value={btn}
+            onClick={
+              btn === "C"
+                ? handleResetClick
+                : btn === "+-"
+                ? handleInvertClick
+                : btn === "%"
+                ? handlePercentClick
+                : btn === "="
+                ? handleEqualsClick
+                : btn === "/" || btn === "X" || btn === "-" || btn === "+"
+                ? () => handleSignClick(btn)
+                : btn === "."
+                ? () => handleCommaClick(btn)
+                : () => handleNumberClick(btn)
+            }
+          />
+        ))}
+      </ButtonBox>
+    </Wrapper>
   );
-}
+};
 
 export default App;
